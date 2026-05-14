@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Packing Room Cleaning Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="./assets/scriptstation-logo.svg" alt="ScriptStation" />
+          <div>
+            <p>ScriptStation</p>
+            <strong>Packing Room</strong>
+          </div>
+        </div>
+
+        <nav aria-label="Dashboard sections">
+          <a href="#cleaning-form">Cleaning log</a>
+          <a href="#status">Today</a>
+          <a href="#history">Recent logs</a>
+          <a href="#setup">Setup</a>
+        </nav>
+
+        <section class="status-card" aria-live="polite">
+          <span class="status-dot" id="integration-dot"></span>
+          <div>
+            <p id="integration-title">Local mode</p>
+            <small id="integration-detail">Add your Apps Script URL in config.js.</small>
+          </div>
+        </section>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">Operations cleaning log</span>
+            <h1>Packing Room Cleaning</h1>
+          </div>
+          <div class="time-panel">
+            <span id="today-label">Today</span>
+            <strong id="clock-label">--:--</strong>
+          </div>
+        </header>
+
+        <section id="status" class="section-band status-grid">
+          <article>
+            <span class="eyebrow">Submission status</span>
+            <h2 id="submission-title">Not submitted today</h2>
+            <p id="submission-detail">Daily cleaning is due by 5:15 PM Arizona time.</p>
+          </article>
+          <article class="checklist-summary">
+            <div>
+              <span>Visible sections</span>
+              <strong id="visible-section-count">1</strong>
+            </div>
+            <div>
+              <span>Completed items</span>
+              <strong id="completed-count">0/0</strong>
+            </div>
+            <div>
+              <span>Next reminder</span>
+              <strong id="reminder-label">5:15 PM</strong>
+            </div>
+          </article>
+        </section>
+
+        <section id="cleaning-form" class="section-band">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">Submit cleaning</span>
+              <h2>End-of-day room signoff</h2>
+            </div>
+            <span class="chip" id="day-chip">Daily</span>
+          </div>
+
+          <form id="cleaning-log-form" class="cleaning-form">
+            <div class="form-grid">
+              <label>
+                Name
+                <input id="employee-name" name="name" type="text" autocomplete="name" required />
+              </label>
+              <label>
+                Initials
+                <input id="employee-initials" name="initials" type="text" maxlength="6" autocomplete="off" required />
+              </label>
+              <label>
+                Date and time
+                <input id="submission-time" name="submissionTime" type="text" readonly required />
+              </label>
+            </div>
+
+            <fieldset class="task-section" data-section="Daily Cleaning">
+              <legend>Daily Cleaning</legend>
+              <div class="task-list" id="daily-tasks"></div>
+            </fieldset>
+
+            <fieldset class="task-section conditional" id="expired-section" data-section="Expired Medication Check" hidden>
+              <legend>Expired Medication Check</legend>
+              <div class="task-list" id="expired-tasks"></div>
+            </fieldset>
+
+            <fieldset class="task-section conditional" id="weekly-section" data-section="Weekly Deep Clean" hidden>
+              <legend>Weekly Deep Clean</legend>
+              <div class="task-list" id="weekly-tasks"></div>
+            </fieldset>
+
+            <label>
+              Notes
+              <textarea id="notes" name="notes" rows="4" placeholder="Optional: supplies replaced, issues found, follow-up needed"></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit">Submit cleaning log</button>
+              <p id="form-message" role="status"></p>
+            </div>
+          </form>
+        </section>
+
+        <section id="history" class="section-band">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">Local history</span>
+              <h2>Recent submissions</h2>
+            </div>
+            <button class="secondary-button" type="button" id="clear-local-history">Clear local history</button>
+          </div>
+          <div class="history-list" id="history-list"></div>
+        </section>
+
+        <section id="setup" class="section-band setup">
+          <div>
+            <span class="eyebrow">Integration setup</span>
+            <h2>Apps Script and Slack</h2>
+          </div>
+          <p>
+            Put your deployed Google Apps Script web app URL in <code>config.js</code>. The dashboard will send each
+            submission there so Apps Script can append the row to Google Sheets and notify Slack.
+          </p>
+          <p>
+            The included <code>apps-script/Code.gs</code> template also has a reminder function for 5:15 PM Arizona
+            time when no cleaning log exists for the current workday.
+          </p>
+        </section>
+      </main>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

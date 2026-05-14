@@ -1,0 +1,16 @@
+<svg width="720" height="180" viewBox="0 0 720 180" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">ScriptStation</title>
+  <desc id="desc">ScriptStation intelligent automation logo</desc>
+  <rect width="720" height="180" fill="white"/>
+  <circle cx="88" cy="90" r="58" fill="#172B3A"/>
+  <path d="M64 66L96 94L64 121" stroke="url(#markGradient)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M111 116H135" stroke="#DDE86A" stroke-width="10" stroke-linecap="round"/>
+  <text x="178" y="88" fill="#172B3A" font-family="Inter, Arial, sans-serif" font-size="46" font-weight="800">ScriptStation</text>
+  <text x="180" y="126" fill="#647181" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600" letter-spacing="9">INTELLIGENT AUTOMATION</text>
+  <defs>
+    <linearGradient id="markGradient" x1="57" y1="68" x2="100" y2="119" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A3CFA9"/>
+      <stop offset="1" stop-color="#DDE86A"/>
+    </linearGradient>
+  </defs>
+</svg>
