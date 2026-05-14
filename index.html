@@ -21,7 +21,6 @@
           <a href="#cleaning-form">Cleaning log</a>
           <a href="#status">Today</a>
           <a href="#history">Recent logs</a>
-          <a href="#setup">Setup</a>
         </nav>
 
         <section class="status-card" aria-live="polite">
@@ -130,20 +129,6 @@
           <div class="history-list" id="history-list"></div>
         </section>
 
-        <section id="setup" class="section-band setup">
-          <div>
-            <span class="eyebrow">Integration setup</span>
-            <h2>Apps Script and Slack</h2>
-          </div>
-          <p>
-            Put your deployed Google Apps Script web app URL in <code>config.js</code>. The dashboard will send each
-            submission there so Apps Script can append the row to Google Sheets and notify Slack.
-          </p>
-          <p>
-            The included <code>apps-script/Code.gs</code> template also has a reminder function for 5:15 PM Arizona
-            time when no cleaning log exists for the current workday.
-          </p>
-        </section>
       </main>
     </div>
 
