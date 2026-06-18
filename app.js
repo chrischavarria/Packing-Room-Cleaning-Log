@@ -1,5 +1,6 @@
 const STORAGE_KEY = "packing-room-cleaning-submissions";
 const TIME_ZONE = "America/Phoenix";
+const DEFAULT_CUTOFF = "17:35";
 
 const dailyTasks = [
   "Wipe down all table tops",
@@ -9,9 +10,7 @@ const dailyTasks = [
   "Mop the floor"
 ];
 
-const expiredTasks = [
-  "Expired medication check completed"
-];
+const expiredTasks = ["Expired medication check completed"];
 
 const weeklyTasks = [
   "Full room inspection (corners, behind shelves, hard-to-reach spots).",
@@ -53,11 +52,15 @@ function cacheElements() {
     weeklyTasks: document.querySelector("#weekly-tasks"),
     expiredSection: document.querySelector("#expired-section"),
     weeklySection: document.querySelector("#weekly-section"),
+    dailyCount: document.querySelector("#daily-count"),
+    expiredCount: document.querySelector("#expired-count"),
+    weeklyCount: document.querySelector("#weekly-count"),
     visibleSectionCount: document.querySelector("#visible-section-count"),
     completedCount: document.querySelector("#completed-count"),
     reminderLabel: document.querySelector("#reminder-label"),
     submissionTitle: document.querySelector("#submission-title"),
     submissionDetail: document.querySelector("#submission-detail"),
+    statusDot: document.querySelector("#status-dot"),
     formMessage: document.querySelector("#form-message"),
     historyList: document.querySelector("#history-list"),
     clearHistory: document.querySelector("#clear-local-history"),
@@ -98,7 +101,7 @@ function updateTime() {
   const now = new Date();
   els.todayLabel.textContent = formatDate(now);
   els.clockLabel.textContent = formatTime(now);
-  els.submissionTime.value = `${formatDate(now)} ${formatTime(now)}`;
+  els.submissionTime.textContent = `${formatDate(now)} ${formatTime(now)}`;
   els.reminderLabel.textContent = cutoffDisplay();
   updateSubmissionStatus();
 }
@@ -132,6 +135,7 @@ async function handleSubmit(event) {
 
   if (!els.form.checkValidity()) {
     els.form.reportValidity();
+    showMessage("Check every item before submitting.", "error");
     return;
   }
 
@@ -213,6 +217,16 @@ function updateCompletionSummary() {
   const checked = boxes.filter((box) => box.checked).length;
   els.visibleSectionCount.textContent = String(visible.length);
   els.completedCount.textContent = `${checked}/${boxes.length}`;
+  updateSectionCount(els.dailyTasks, els.dailyCount);
+  updateSectionCount(els.expiredTasks, els.expiredCount);
+  updateSectionCount(els.weeklyTasks, els.weeklyCount);
+}
+
+function updateSectionCount(listEl, countEl) {
+  if (!listEl || !countEl) return;
+  const boxes = Array.from(listEl.querySelectorAll("[data-task]"));
+  const checked = boxes.filter((box) => box.checked).length;
+  countEl.textContent = `${checked}/${boxes.length}`;
 }
 
 function updateSubmissionStatus() {
@@ -220,16 +234,18 @@ function updateSubmissionStatus() {
   if (todayRecord) {
     els.submissionTitle.textContent = "Submitted today";
     els.submissionDetail.textContent = `${todayRecord.name} submitted at ${todayRecord.submittedAtLocal}.`;
+    els.statusDot.style.background = "#157054";
     return;
   }
 
   const now = new Date();
   const cutoff = cutoffDate(now);
   const isPastDue = now > cutoff;
-  els.submissionTitle.textContent = isPastDue ? "Past due today" : "Not submitted today";
+  els.submissionTitle.textContent = isPastDue ? "Past due" : "Not submitted yet";
   els.submissionDetail.textContent = isPastDue
-    ? "Slack reminder should fire from Apps Script if the sheet has no submission."
+    ? `Daily cleaning was due by ${cutoffDisplay()} Arizona time.`
     : `Daily cleaning is due by ${cutoffDisplay()} Arizona time.`;
+  els.statusDot.style.background = isPastDue ? "#b42318" : "#c2871f";
 }
 
 function renderHistory() {
@@ -241,14 +257,14 @@ function renderHistory() {
 
   els.historyList.innerHTML = items
     .map((item) => {
-      const sectionNames = item.sections.map((section) => section.title).join(", ");
+      const sectionNames = item.sections.map((section) => section.title || section).join(", ");
       return `
         <article class="history-item">
           <div>
             <strong>${escapeHtml(item.name)} (${escapeHtml(item.initials)})</strong>
-            <span>${escapeHtml(item.submittedAtLocal)} · ${escapeHtml(sectionNames)}</span>
+            <span class="meta">${escapeHtml(item.submittedAtLocal)} · ${escapeHtml(sectionNames)}</span>
           </div>
-          <span>${escapeHtml(item.dateKey)}</span>
+          <span class="date">${escapeHtml(item.dateKey)}</span>
         </article>
       `;
     })
@@ -276,7 +292,7 @@ function clearLocalHistory() {
 
 function suggestInitials() {
   if (els.employeeInitials.value.trim()) return;
-  const initials = els.employeeName.value
+  els.employeeInitials.value = els.employeeName.value
     .trim()
     .split(/\s+/)
     .filter(Boolean)
@@ -284,7 +300,6 @@ function suggestInitials() {
     .join("")
     .slice(0, 4)
     .toUpperCase();
-  els.employeeInitials.value = initials;
 }
 
 function updateIntegrationStatus() {
@@ -296,22 +311,19 @@ function updateIntegrationStatus() {
   } else if (config.slackWebhookUrl) {
     els.integrationDot.classList.add("live");
     els.integrationTitle.textContent = "Slack direct mode";
-    els.integrationDetail.textContent = "Add Apps Script URL to log to Sheets.";
+    els.integrationDetail.textContent = "Add an Apps Script URL to log to Sheets.";
   }
 }
 
 function cutoffDate(date) {
-  const [hour, minute] = (window.PACKING_ROOM_CONFIG?.reminderCutoff || "17:15").split(":").map(Number);
+  const [hour, minute] = (window.PACKING_ROOM_CONFIG?.reminderCutoff || DEFAULT_CUTOFF).split(":").map(Number);
   const cutoff = new Date(date);
   cutoff.setHours(hour, minute, 0, 0);
   return cutoff;
 }
 
 function cutoffDisplay() {
-  return cutoffDate(new Date()).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit"
-  });
+  return cutoffDate(new Date()).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
 function formatDate(date) {
@@ -319,8 +331,7 @@ function formatDate(date) {
     timeZone: TIME_ZONE,
     weekday: "short",
     month: "short",
-    day: "numeric",
-    year: "numeric"
+    day: "numeric"
   }).format(date);
 }
 
@@ -340,18 +351,19 @@ function localDateKey(date) {
 
 function formatParts(date) {
   const values = {};
-  const formatter = new Intl.DateTimeFormat("en-US", {
+  new Intl.DateTimeFormat("en-US", {
     timeZone: TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     weekday: "short"
-  });
-  formatter.formatToParts(date).forEach((part) => {
-    if (part.type !== "literal") values[part.type] = part.value;
-  });
-  const weekdayNumber = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[values.weekday];
-  return { ...values, weekdayNumber };
+  })
+    .formatToParts(date)
+    .forEach((part) => {
+      if (part.type !== "literal") values[part.type] = part.value;
+    });
+  values.weekdayNumber = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[values.weekday];
+  return values;
 }
 
 function showMessage(message, type) {

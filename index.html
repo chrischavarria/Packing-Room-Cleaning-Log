@@ -3,23 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Packing Room Cleaning Dashboard</title>
+    <title>Packing Room Cleaning Log</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand">
-          <img src="./assets/scriptstation-logo.svg" alt="ScriptStation" />
+          <div class="brand-mark" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 6L14 12L8 18" stroke="#22b3a3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M15.4 18H19" stroke="#cdd84f" stroke-width="2.6" stroke-linecap="round" />
+            </svg>
+          </div>
           <div>
-            <p>ScriptStation</p>
-            <strong>Packing Room</strong>
+            <p class="brand-org">ScriptStation</p>
+            <strong class="brand-name">Packing Room</strong>
           </div>
         </div>
 
         <nav aria-label="Dashboard sections">
-          <a href="#cleaning-form">Cleaning log</a>
           <a href="#status">Today</a>
+          <a href="#cleaning-form">Cleaning log</a>
           <a href="#history">Recent logs</a>
         </nav>
 
@@ -27,7 +38,7 @@
           <span class="status-dot" id="integration-dot"></span>
           <div>
             <p id="integration-title">Local mode</p>
-            <small id="integration-detail">Add your Apps Script URL in config.js.</small>
+            <small id="integration-detail">Submissions are saved on this device.</small>
           </div>
         </section>
       </aside>
@@ -35,7 +46,7 @@
       <main>
         <header class="topbar">
           <div>
-            <span class="eyebrow">Operations cleaning log</span>
+            <span class="eyebrow accent">Operations · Cleaning log</span>
             <h1>Packing Room Cleaning</h1>
           </div>
           <div class="time-panel">
@@ -44,32 +55,36 @@
           </div>
         </header>
 
-        <section id="status" class="section-band status-grid">
-          <article>
+        <section id="status" class="status-grid">
+          <article class="card">
             <span class="eyebrow">Submission status</span>
-            <h2 id="submission-title">Not submitted today</h2>
-            <p id="submission-detail">Daily cleaning is due by 5:15 PM Arizona time.</p>
+            <div class="status-headline">
+              <span class="dot" id="status-dot"></span>
+              <h2 id="submission-title">Not submitted yet</h2>
+            </div>
+            <p id="submission-detail">Daily cleaning is due by 5:35 PM Arizona time.</p>
           </article>
-          <article class="checklist-summary">
+
+          <article class="card metrics">
             <div>
-              <span>Visible sections</span>
+              <span class="metric-label">Sections</span>
               <strong id="visible-section-count">1</strong>
             </div>
             <div>
-              <span>Completed items</span>
+              <span class="metric-label">Completed</span>
               <strong id="completed-count">0/0</strong>
             </div>
             <div>
-              <span>Next reminder</span>
-              <strong id="reminder-label">5:15 PM</strong>
+              <span class="metric-label">Due by</span>
+              <strong id="reminder-label">5:35 PM</strong>
             </div>
           </article>
         </section>
 
-        <section id="cleaning-form" class="section-band">
+        <section id="cleaning-form" class="card section-block">
           <div class="section-heading">
             <div>
-              <span class="eyebrow">Submit cleaning</span>
+              <span class="eyebrow accent">Submit cleaning</span>
               <h2>End-of-day room signoff</h2>
             </div>
             <span class="chip" id="day-chip">Daily</span>
@@ -79,30 +94,39 @@
             <div class="form-grid">
               <label>
                 Name
-                <input id="employee-name" name="name" type="text" autocomplete="name" required />
+                <input id="employee-name" name="name" type="text" autocomplete="name" placeholder="Full name" required />
               </label>
               <label>
                 Initials
-                <input id="employee-initials" name="initials" type="text" maxlength="6" autocomplete="off" required />
+                <input id="employee-initials" name="initials" type="text" maxlength="6" autocomplete="off" placeholder="ABC" required />
               </label>
               <label>
                 Date and time
-                <input id="submission-time" name="submissionTime" type="text" readonly required />
+                <div id="submission-time" class="readonly-field">—</div>
               </label>
             </div>
 
             <fieldset class="task-section" data-section="Daily Cleaning">
-              <legend>Daily Cleaning</legend>
+              <div class="task-section-head">
+                <h3>Daily Cleaning</h3>
+                <span class="task-count" id="daily-count"></span>
+              </div>
               <div class="task-list" id="daily-tasks"></div>
             </fieldset>
 
-            <fieldset class="task-section conditional" id="expired-section" data-section="Expired Medication Check" hidden>
-              <legend>Expired Medication Check</legend>
+            <fieldset class="task-section" id="expired-section" data-section="Expired Medication Check" hidden>
+              <div class="task-section-head">
+                <h3>Expired Medication Check</h3>
+                <span class="task-count" id="expired-count"></span>
+              </div>
               <div class="task-list" id="expired-tasks"></div>
             </fieldset>
 
-            <fieldset class="task-section conditional" id="weekly-section" data-section="Weekly Deep Clean" hidden>
-              <legend>Weekly Deep Clean</legend>
+            <fieldset class="task-section" id="weekly-section" data-section="Weekly Deep Clean" hidden>
+              <div class="task-section-head">
+                <h3>Weekly Deep Clean</h3>
+                <span class="task-count" id="weekly-count"></span>
+              </div>
               <div class="task-list" id="weekly-tasks"></div>
             </fieldset>
 
@@ -118,7 +142,7 @@
           </form>
         </section>
 
-        <section id="history" class="section-band">
+        <section id="history" class="card section-block">
           <div class="section-heading">
             <div>
               <span class="eyebrow">Local history</span>
@@ -128,7 +152,6 @@
           </div>
           <div class="history-list" id="history-list"></div>
         </section>
-
       </main>
     </div>
 
