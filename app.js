@@ -1,8 +1,20 @@
 const STORAGE_KEY = "packing-room-cleaning-submissions";
 const TIME_ZONE = "America/Phoenix";
 const DEFAULT_CUTOFF = "17:35";
+let activePeriod = "morning";
 
-const dailyTasks = [
+const morningTasks = [
+  "Workstation 1 morning cleaning completed",
+  "Workstation 2 morning cleaning completed",
+  "Workstation 3 morning cleaning completed",
+  "Workstation 4 morning cleaning completed"
+];
+
+const eveningTasks = [
+  "Workstation 1 evening cleaning completed",
+  "Workstation 2 evening cleaning completed",
+  "Workstation 3 evening cleaning completed",
+  "Workstation 4 evening cleaning completed",
   "Wipe down all table tops",
   "Clean all shelves",
   "Check under tables for caps, pumps, etc.",
@@ -47,6 +59,8 @@ function cacheElements() {
     todayLabel: document.querySelector("#today-label"),
     clockLabel: document.querySelector("#clock-label"),
     dayChip: document.querySelector("#day-chip"),
+    dailySection: document.querySelector("[data-section='Daily Cleaning']"),
+    dailySectionTitle: document.querySelector("#daily-section-title"),
     dailyTasks: document.querySelector("#daily-tasks"),
     expiredTasks: document.querySelector("#expired-tasks"),
     weeklyTasks: document.querySelector("#weekly-tasks"),
@@ -64,6 +78,8 @@ function cacheElements() {
     formMessage: document.querySelector("#form-message"),
     historyList: document.querySelector("#history-list"),
     clearHistory: document.querySelector("#clear-local-history"),
+    periodTabs: document.querySelectorAll(".period-tab"),
+    submitButton: document.querySelector("#submit-button"),
     integrationDot: document.querySelector("#integration-dot"),
     integrationTitle: document.querySelector("#integration-title"),
     integrationDetail: document.querySelector("#integration-detail")
@@ -75,10 +91,12 @@ function wireEvents() {
   els.form.addEventListener("change", updateCompletionSummary);
   els.employeeName.addEventListener("input", suggestInitials);
   els.clearHistory.addEventListener("click", clearLocalHistory);
+  els.periodTabs.forEach((tab) => tab.addEventListener("click", handlePeriodTabClick));
 }
 
 function renderTasks() {
-  els.dailyTasks.innerHTML = taskMarkup("daily", dailyTasks);
+  const tasks = activePeriod === "morning" ? morningTasks : eveningTasks;
+  els.dailyTasks.innerHTML = taskMarkup(activePeriod, tasks);
   els.expiredTasks.innerHTML = taskMarkup("expired", expiredTasks);
   els.weeklyTasks.innerHTML = taskMarkup("weekly", weeklyTasks);
 }
@@ -110,23 +128,39 @@ function renderDaySections() {
   const day = Number(formatParts(new Date()).weekdayNumber);
   const isThursday = day === 4;
   const isFriday = day === 5;
-  els.expiredSection.hidden = !isThursday;
-  els.weeklySection.hidden = !isFriday;
+  const isEvening = activePeriod === "evening";
+  els.dailySection.dataset.section = isEvening ? "Evening Cleaning" : "Morning Cleaning";
+  els.dailySectionTitle.textContent = isEvening ? "Evening Cleaning" : "Morning Cleaning";
+  els.submitButton.textContent = `Submit ${activePeriod} cleaning log`;
+  els.expiredSection.hidden = !isEvening || !isThursday;
+  els.weeklySection.hidden = !isEvening || !isFriday;
 
   els.expiredSection.querySelectorAll("input").forEach((input) => {
-    input.required = isThursday;
-    input.disabled = !isThursday;
+    input.required = isEvening && isThursday;
+    input.disabled = !isEvening || !isThursday;
   });
   els.weeklySection.querySelectorAll("input").forEach((input) => {
-    input.required = isFriday;
-    input.disabled = !isFriday;
+    input.required = isEvening && isFriday;
+    input.disabled = !isEvening || !isFriday;
   });
 
-  const labels = ["Daily"];
-  if (isThursday) labels.push("Expired check");
-  if (isFriday) labels.push("Deep clean");
+  const labels = [isEvening ? "Evening" : "Morning"];
+  if (isEvening && isThursday) labels.push("Expired check");
+  if (isEvening && isFriday) labels.push("Deep clean");
   els.dayChip.textContent = labels.join(" + ");
   updateCompletionSummary();
+}
+
+function handlePeriodTabClick(event) {
+  activePeriod = event.currentTarget.dataset.period;
+  els.periodTabs.forEach((tab) => {
+    const selected = tab.dataset.period === activePeriod;
+    tab.classList.toggle("active", selected);
+    tab.setAttribute("aria-selected", String(selected));
+  });
+  renderTasks();
+  renderDaySections();
+  clearMessage();
 }
 
 async function handleSubmit(event) {
@@ -178,6 +212,7 @@ function buildPayload() {
     type: "cleaning_submission",
     name: els.employeeName.value.trim(),
     initials: els.employeeInitials.value.trim().toUpperCase(),
+    cleaningPeriod: activePeriod,
     submittedAt: now.toISOString(),
     submittedAtLocal: `${formatDate(now)} ${formatTime(now)}`,
     dateKey: localDateKey(now),
@@ -202,8 +237,9 @@ async function postSlackWebhook(url, payload) {
     `*${section.title}*`,
     ...section.tasks.map((task) => `• ${task.completed ? "Done" : "Missing"} - ${task.task}`)
   ]);
+  const periodLabel = payload.cleaningPeriod === "evening" ? "Evening" : "Morning";
   await postJson(url, {
-    text: `Packing Room Cleaning submitted by ${payload.name} (${payload.initials}) at ${payload.submittedAtLocal}\n${lines.join("\n")}`
+    text: `Packing Room ${periodLabel} Cleaning submitted by ${payload.name} (${payload.initials}) at ${payload.submittedAtLocal}\n${lines.join("\n")}`
   });
 }
 
@@ -230,11 +266,21 @@ function updateSectionCount(listEl, countEl) {
 }
 
 function updateSubmissionStatus() {
-  const todayRecord = submissions().find((item) => item.dateKey === localDateKey(new Date()));
-  if (todayRecord) {
-    els.submissionTitle.textContent = "Submitted today";
-    els.submissionDetail.textContent = `${todayRecord.name} submitted at ${todayRecord.submittedAtLocal}.`;
+  const todayRecords = submissions().filter((item) => item.dateKey === localDateKey(new Date()));
+  const eveningRecord = todayRecords.find((item) => item.cleaningPeriod === "evening");
+  const morningRecord = todayRecords.find((item) => item.cleaningPeriod === "morning");
+
+  if (eveningRecord) {
+    els.submissionTitle.textContent = "Evening submitted today";
+    els.submissionDetail.textContent = `${eveningRecord.name} submitted at ${eveningRecord.submittedAtLocal}.`;
     els.statusDot.style.background = "#157054";
+    return;
+  }
+
+  if (morningRecord) {
+    els.submissionTitle.textContent = "Morning submitted today";
+    els.submissionDetail.textContent = `Evening cleaning is still due by ${cutoffDisplay()} Arizona time.`;
+    els.statusDot.style.background = "#c2871f";
     return;
   }
 

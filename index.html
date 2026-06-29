@@ -106,10 +106,48 @@
               </label>
             </div>
 
+            <div class="period-tabs" role="tablist" aria-label="Cleaning period">
+              <button class="period-tab active" type="button" id="morning-tab" data-period="morning" role="tab" aria-selected="true" aria-controls="daily-tasks">
+                Morning
+              </button>
+              <button class="period-tab" type="button" id="evening-tab" data-period="evening" role="tab" aria-selected="false" aria-controls="daily-tasks">
+                Evening
+              </button>
+            </div>
+
             <fieldset class="task-section" data-section="Daily Cleaning">
               <div class="task-section-head">
-                <h3>Daily Cleaning</h3>
+                <h3 id="daily-section-title">Morning Cleaning</h3>
                 <span class="task-count" id="daily-count"></span>
+              </div>
+              <div class="cleaning-guide" aria-label="Cleaning product guide">
+                <h4>Cleaning Product Guide</h4>
+                <dl>
+                  <div>
+                    <dt>Deactivating and decontaminating - hoods, carts, counters, work surfaces, equipment</dt>
+                    <dd>Clorox Healthcare Peroxide Cleaner for the first pass.</dd>
+                  </div>
+                  <div>
+                    <dt>Deactivating and decontaminating - floors</dt>
+                    <dd>Clorox Healthcare Bleach Germicidal Cleaner for the first pass.</dd>
+                  </div>
+                  <div>
+                    <dt>Cleaning agent - hoods, carts, counters, work surfaces, equipment</dt>
+                    <dd>Clorox Healthcare Peroxide Cleaner for the second pass. Dwell time: 3 minutes.</dd>
+                  </div>
+                  <div>
+                    <dt>Cleaning agent - floors</dt>
+                    <dd>Clorox Healthcare Bleach Germicidal Cleaner for the second pass. Dwell time: 3 minutes.</dd>
+                  </div>
+                  <div>
+                    <dt>Disinfectant</dt>
+                    <dd>70% Isopropyl Alcohol. Dwell time: until dry.</dd>
+                  </div>
+                  <div>
+                    <dt>NIU</dt>
+                    <dd>Not in use.</dd>
+                  </div>
+                </dl>
               </div>
               <div class="task-list" id="daily-tasks"></div>
             </fieldset>
@@ -136,7 +174,7 @@
             </label>
 
             <div class="form-actions">
-              <button type="submit">Submit cleaning log</button>
+              <button type="submit" id="submit-button">Submit morning cleaning log</button>
               <p id="form-message" role="status"></p>
             </div>
           </form>

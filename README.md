@@ -7,9 +7,13 @@ or host it on GitHub Pages.
 ## Features
 
 - **Live Arizona clock** (America/Phoenix) and date.
-- **Daily checklist** plus automatic extra sections:
-  - **Expired Medication Check** on Thursdays.
-  - **Weekly Deep Clean** on Fridays.
+- **Morning / Evening tabs** so staff only see the checklist for the cleaning period they are submitting.
+- **Daily checklist** with workstation checks:
+  - **Morning**: Workstations 1-4.
+  - **Evening**: Workstations 1-4 plus the end-of-day room cleaning tasks.
+  - **Expired Medication Check** on Thursday evenings.
+  - **Weekly Deep Clean** on Friday evenings.
+- **Cleaning product guide** shown directly in the form.
 - **Submission status** — shows whether today's cleaning is done, not yet done, or past due.
 - **Validation** — name, initials, and every visible checklist item are required.
 - **Local history** — the last submissions are saved in the browser (localStorage).
@@ -23,6 +27,7 @@ or host it on GitHub Pages.
 | `styles.css` | All styling |
 | `app.js` | Clock, checklist, validation, history, submission logic |
 | `config.js` | Optional Apps Script / Slack settings + due time |
+| `apps-script/Code.gs` | Google Apps Script template for Sheets, Slack, weekend closed rows, and reminders |
 
 ## Configuration
 
@@ -33,9 +38,13 @@ integration, edit `config.js`:
 window.PACKING_ROOM_CONFIG = {
   appScriptUrl: "",      // Google Apps Script web-app URL (optional)
   slackWebhookUrl: "",   // Slack incoming webhook (optional, used if appScriptUrl is empty)
-  reminderCutoff: "17:35" // daily due time, 24h Arizona time
+  reminderCutoff: "17:35" // evening due time, 24h Arizona time
 };
 ```
+
+Keep the Slack webhook inside Apps Script only. Paste it into `SLACK_WEBHOOK_URL`
+in `apps-script/Code.gs`, then deploy Apps Script as a web app and put that web
+app URL in `config.js`.
 
 ## Deploy on GitHub Pages
 

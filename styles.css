@@ -414,6 +414,36 @@ textarea:focus {
   background: #f6f8f9;
 }
 
+.period-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 4px;
+  width: min(100%, 320px);
+  padding: 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--soft);
+}
+
+.period-tab {
+  min-height: 40px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.period-tab:hover,
+.period-tab:focus-visible,
+.period-tab.active {
+  background: var(--accent);
+  color: #fff;
+  outline: none;
+}
+
 .task-section {
   margin: 0;
   padding: 20px;
@@ -433,6 +463,49 @@ textarea:focus {
   font-family: "IBM Plex Mono", monospace;
   font-size: 11px;
   color: #8a96a0;
+}
+
+.cleaning-guide {
+  margin-bottom: 16px;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #c7ddd9;
+  background: #f3fbf9;
+}
+
+.cleaning-guide h4 {
+  margin: 0 0 11px;
+  color: var(--accent-strong);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cleaning-guide dl {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+}
+
+.cleaning-guide div {
+  display: grid;
+  gap: 2px;
+}
+
+.cleaning-guide dt,
+.cleaning-guide dd {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cleaning-guide dt {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cleaning-guide dd {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .task-list {
