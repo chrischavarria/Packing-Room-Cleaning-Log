@@ -36,6 +36,12 @@ const weeklyTasks = [
   "Computers, keyboards, wires, mouse, etc. free of residue"
 ];
 
+const monthlyTasks = [
+  "Windows cleaned",
+  "Empty totes cleaned",
+  "Adhesive/stickers are removed from floors or surfaces"
+];
+
 const els = {};
 
 document.addEventListener("DOMContentLoaded", init);
@@ -67,11 +73,14 @@ function cacheElements() {
     dailyTasks: document.querySelector("#daily-tasks"),
     expiredTasks: document.querySelector("#expired-tasks"),
     weeklyTasks: document.querySelector("#weekly-tasks"),
+    monthlyTasks: document.querySelector("#monthly-tasks"),
     expiredSection: document.querySelector("#expired-section"),
     weeklySection: document.querySelector("#weekly-section"),
+    monthlySection: document.querySelector("#monthly-section"),
     dailyCount: document.querySelector("#daily-count"),
     expiredCount: document.querySelector("#expired-count"),
     weeklyCount: document.querySelector("#weekly-count"),
+    monthlyCount: document.querySelector("#monthly-count"),
     visibleSectionCount: document.querySelector("#visible-section-count"),
     completedCount: document.querySelector("#completed-count"),
     reminderLabel: document.querySelector("#reminder-label"),
@@ -102,6 +111,7 @@ function renderTasks() {
   els.dailyTasks.innerHTML = taskMarkup(activePeriod, tasks);
   els.expiredTasks.innerHTML = taskMarkup("expired", expiredTasks);
   els.weeklyTasks.innerHTML = taskMarkup("weekly", weeklyTasks);
+  els.monthlyTasks.innerHTML = taskMarkup("monthly", monthlyTasks);
 }
 
 function taskMarkup(prefix, tasks) {
@@ -131,12 +141,14 @@ function renderDaySections() {
   const day = Number(formatParts(new Date()).weekdayNumber);
   const isThursday = day === 4;
   const isFriday = day === 5;
+  const isMonthlyFriday = isLastFriday(new Date());
   const isEvening = activePeriod === "evening";
   els.dailySection.dataset.section = isEvening ? "Evening Cleaning" : "Morning Cleaning";
   els.dailySectionTitle.textContent = isEvening ? "Evening Cleaning" : "Morning Cleaning";
   els.submitButton.textContent = `Submit ${activePeriod} cleaning log`;
   els.expiredSection.hidden = !isEvening || !isThursday;
   els.weeklySection.hidden = !isEvening || !isFriday;
+  els.monthlySection.hidden = !isEvening || !isMonthlyFriday;
 
   els.expiredSection.querySelectorAll("input").forEach((input) => {
     input.required = isEvening && isThursday;
@@ -146,10 +158,15 @@ function renderDaySections() {
     input.required = isEvening && isFriday;
     input.disabled = !isEvening || !isFriday;
   });
+  els.monthlySection.querySelectorAll("input").forEach((input) => {
+    input.required = isEvening && isMonthlyFriday;
+    input.disabled = !isEvening || !isMonthlyFriday;
+  });
 
   const labels = [isEvening ? "Evening" : "Morning"];
   if (isEvening && isThursday) labels.push("Expired check");
   if (isEvening && isFriday) labels.push("Deep clean");
+  if (isEvening && isMonthlyFriday) labels.push("Monthly");
   els.dayChip.textContent = labels.join(" + ");
   updateCompletionSummary();
 }
@@ -259,6 +276,7 @@ function updateCompletionSummary() {
   updateSectionCount(els.dailyTasks, els.dailyCount);
   updateSectionCount(els.expiredTasks, els.expiredCount);
   updateSectionCount(els.weeklyTasks, els.weeklyCount);
+  updateSectionCount(els.monthlyTasks, els.monthlyCount);
 }
 
 function updateSectionCount(listEl, countEl) {
@@ -413,6 +431,15 @@ function formatParts(date) {
     });
   values.weekdayNumber = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[values.weekday];
   return values;
+}
+
+function isLastFriday(date) {
+  const parts = formatParts(date);
+  if (parts.weekdayNumber !== 5) return false;
+
+  const nextWeek = new Date(`${parts.year}-${parts.month}-${parts.day}T12:00:00Z`);
+  nextWeek.setUTCDate(nextWeek.getUTCDate() + 7);
+  return formatParts(nextWeek).month !== parts.month;
 }
 
 function showMessage(message, type) {

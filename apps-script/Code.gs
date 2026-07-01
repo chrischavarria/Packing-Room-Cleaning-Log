@@ -33,7 +33,10 @@ const EVENING_TASK_COLUMNS = [
   { header: "Fri - Buildup/Residue", task: "Clean any visible buildup or residue" },
   { header: "Fri - Replace Supplies", task: "Replace any cloths, glove boxes, mop heads, or cleaning tools" },
   { header: "Fri - Passthrough/Cart", task: "Clean passthrough and cart (top and sides)" },
-  { header: "Fri - Computers", task: "Computers, keyboards, wires, mouse, etc. free of residue" }
+  { header: "Fri - Computers", task: "Computers, keyboards, wires, mouse, etc. free of residue" },
+  { header: "Monthly - Windows", task: "Windows cleaned" },
+  { header: "Monthly - Empty Totes", task: "Empty totes cleaned" },
+  { header: "Monthly - Adhesive/Stickers", task: "Adhesive/stickers are removed from floors or surfaces" }
 ];
 
 const BASE_HEADER_COLUMNS = [

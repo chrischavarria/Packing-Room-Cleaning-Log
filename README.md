@@ -13,6 +13,7 @@ or host it on GitHub Pages.
   - **Evening**: Workstations 1-4, packing machines, repeater pump machine, plus the end-of-day room cleaning tasks.
   - **Expired Medication Check** on Thursday evenings.
   - **Weekly Deep Clean** on Friday evenings.
+  - **Monthly Cleaning** on the last Friday evening of each month.
 - **Cleaning product guide** shown directly in the form.
 - **Submission status** — shows whether today's cleaning is done, not yet done, or past due.
 - **Validation** — name, initials, and every visible checklist item are required.
