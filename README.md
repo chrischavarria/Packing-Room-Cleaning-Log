@@ -27,7 +27,7 @@ or host it on GitHub Pages.
 | `styles.css` | All styling |
 | `app.js` | Clock, checklist, validation, history, submission logic |
 | `config.js` | Optional Apps Script / Slack settings + due time |
-| `apps-script/Code.gs` | Google Apps Script template for Morning Cleaning / Evening Cleaning Sheet tabs, Slack, weekend closed rows, and reminders |
+| `apps-script/Code.gs` | Google Apps Script template for Morning Cleaning / Evening Cleaning Sheet tabs, Slack, weekend closed rows, reminders, and monthly archives |
 
 ## Configuration
 
@@ -45,6 +45,20 @@ window.PACKING_ROOM_CONFIG = {
 Keep the Slack webhook inside Apps Script only. Paste it into `SLACK_WEBHOOK_URL`
 in `apps-script/Code.gs`, then deploy Apps Script as a web app and put that web
 app URL in `config.js`.
+
+The Apps Script also includes monthly archiving. Run `createMonthlyArchiveTrigger`
+once in Apps Script to archive the previous month on the 1st of each month. The
+archive creates a new spreadsheet named `Packing Room Cleaning Log - YYYY-MM`,
+copies the previous month's Morning and Evening rows into it, then clears those
+rows from the live tabs while keeping the headers.
+
+If you want archive files saved into a specific Google Drive folder, paste that
+folder ID into `ARCHIVE_FOLDER_ID` in `apps-script/Code.gs`.
+
+For a one-time cleanup of older rows already in the original `Packing Room Cleaning`
+tab, run `archiveAllCompletedMonths` once. It creates one archive spreadsheet per
+completed month it finds, including legacy rows, then clears those archived rows
+from the live workbook.
 
 ## Deploy on GitHub Pages
 
