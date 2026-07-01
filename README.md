@@ -10,7 +10,7 @@ or host it on GitHub Pages.
 - **Morning / Evening tabs** so staff only see the checklist for the cleaning period they are submitting.
 - **Daily checklist** with workstation checks:
   - **Morning**: Workstations 1-4.
-  - **Evening**: Workstations 1-4 plus the end-of-day room cleaning tasks.
+  - **Evening**: Workstations 1-4, packing machines, repeater pump machine, plus the end-of-day room cleaning tasks.
   - **Expired Medication Check** on Thursday evenings.
   - **Weekly Deep Clean** on Friday evenings.
 - **Cleaning product guide** shown directly in the form.
