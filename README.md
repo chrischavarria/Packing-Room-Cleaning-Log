@@ -27,7 +27,7 @@ or host it on GitHub Pages.
 | `styles.css` | All styling |
 | `app.js` | Clock, checklist, validation, history, submission logic |
 | `config.js` | Optional Apps Script / Slack settings + due time |
-| `apps-script/Code.gs` | Google Apps Script template for Sheets, Slack, weekend closed rows, and reminders |
+| `apps-script/Code.gs` | Google Apps Script template for Morning Cleaning / Evening Cleaning Sheet tabs, Slack, weekend closed rows, and reminders |
 
 ## Configuration
 

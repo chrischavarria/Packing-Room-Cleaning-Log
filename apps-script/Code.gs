@@ -1,15 +1,21 @@
-const SHEET_NAME = "Packing Room Cleaning";
+const SHEET_NAMES = {
+  morning: "Morning Cleaning",
+  evening: "Evening Cleaning"
+};
 const TIME_ZONE = "America/Phoenix";
 const SLACK_WEBHOOK_URL = "PASTE_SLACK_WEBHOOK_URL_HERE";
 
-const TASK_COLUMNS = [
+const MORNING_TASK_COLUMNS = [
   { header: "Daily - WS1 Morning", task: "Workstation 1 morning cleaning completed" },
-  { header: "Daily - WS1 Evening", task: "Workstation 1 evening cleaning completed" },
   { header: "Daily - WS2 Morning", task: "Workstation 2 morning cleaning completed" },
-  { header: "Daily - WS2 Evening", task: "Workstation 2 evening cleaning completed" },
   { header: "Daily - WS3 Morning", task: "Workstation 3 morning cleaning completed" },
+  { header: "Daily - WS4 Morning", task: "Workstation 4 morning cleaning completed" }
+];
+
+const EVENING_TASK_COLUMNS = [
+  { header: "Daily - WS1 Evening", task: "Workstation 1 evening cleaning completed" },
+  { header: "Daily - WS2 Evening", task: "Workstation 2 evening cleaning completed" },
   { header: "Daily - WS3 Evening", task: "Workstation 3 evening cleaning completed" },
-  { header: "Daily - WS4 Morning", task: "Workstation 4 morning cleaning completed" },
   { header: "Daily - WS4 Evening", task: "Workstation 4 evening cleaning completed" },
   { header: "Daily - Tables", task: "Wipe down all table tops" },
   { header: "Daily - Shelves", task: "Clean all shelves" },
@@ -25,16 +31,13 @@ const TASK_COLUMNS = [
   { header: "Fri - Computers", task: "Computers, keyboards, wires, mouse, etc. free of residue" }
 ];
 
-const HEADER_COLUMNS = [
+const BASE_HEADER_COLUMNS = [
   "Date",
   "Submitted Local Time",
   "Submitted ISO",
   "Name",
   "Initials",
-  "Cleaning Period",
-  "Sections Completed",
-  ...TASK_COLUMNS.map((column) => column.header),
-  "Notes"
+  "Sections Completed"
 ];
 
 function doPost(event) {
@@ -52,8 +55,11 @@ function doPost(event) {
 }
 
 function appendCleaningSubmission(payload) {
-  const sheet = getSheet();
-  ensureHeader(sheet);
+  const period = normalizePeriod(payload.cleaningPeriod);
+  const taskColumns = taskColumnsForPeriod(period);
+  const headerColumns = headerColumnsForPeriod(period);
+  const sheet = getSheet(sheetNameForPeriod(period));
+  ensureHeader(sheet, headerColumns);
 
   const sectionSummary = payload.sections
     .map((section) => `${section.title}: ${section.tasks.filter((task) => task.completed).length}/${section.tasks.length}`)
@@ -71,19 +77,19 @@ function appendCleaningSubmission(payload) {
     payload.submittedAt,
     payload.name,
     payload.initials,
-    cleanPeriodLabel(payload.cleaningPeriod),
     sectionSummary,
-    ...TASK_COLUMNS.map((column) => taskLookup[normalizeTask(column.task)] ? "Yes" : ""),
+    ...taskColumns.map((column) => taskLookup[normalizeTask(column.task)] ? "Yes" : ""),
     payload.notes || ""
   ]);
 }
 
 function appendClosedWeekendEntries(payload) {
-  if (payload.cleaningPeriod !== "evening") return;
+  if (normalizePeriod(payload.cleaningPeriod) !== "evening") return;
   if (!isFridayDateKey(payload.dateKey)) return;
 
-  const sheet = getSheet();
-  ensureHeader(sheet);
+  const headerColumns = headerColumnsForPeriod("evening");
+  const sheet = getSheet(SHEET_NAMES.evening);
+  ensureHeader(sheet, headerColumns);
   const existingDates = sheet.getRange(2, 1, Math.max(sheet.getLastRow() - 1, 1), 1).getValues().flat();
 
   [1, 2].map((days) => addDaysToDateKey(payload.dateKey, days)).forEach((dateKey) => {
@@ -95,9 +101,8 @@ function appendClosedWeekendEntries(payload) {
       "",
       "Closed",
       "--",
-      "Closed",
       "Closed - Weekend",
-      ...TASK_COLUMNS.map(() => ""),
+      ...EVENING_TASK_COLUMNS.map(() => ""),
       `Automatically logged from ${payload.dateKey} Friday cleaning submission.`
     ]);
   });
@@ -126,12 +131,10 @@ function sendPackingRoomReminder() {
   const today = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd");
   if (isWeekendDateKey(today)) return;
 
-  const sheet = getSheet();
-  ensureHeader(sheet);
+  const sheet = getSheet(SHEET_NAMES.evening);
+  ensureHeader(sheet, headerColumnsForPeriod("evening"));
   const values = sheet.getDataRange().getValues();
-  const submittedToday = values.slice(1).some((row) =>
-    matchesDateKey(row[0], today) && normalizeTask(row[5]) === "evening"
-  );
+  const submittedToday = values.slice(1).some((row) => matchesDateKey(row[0], today));
 
   if (!submittedToday) {
     postToSlack(`Packing Room Evening Cleaning has not been submitted for ${today}. Please complete the cleaning log.`);
@@ -157,24 +160,24 @@ function postToSlack(text) {
   });
 }
 
-function getSheet() {
+function getSheet(sheetName) {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  return spreadsheet.getSheetByName(SHEET_NAME) || spreadsheet.insertSheet(SHEET_NAME);
+  return spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
 }
 
-function ensureHeader(sheet) {
+function ensureHeader(sheet, headerColumns) {
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(HEADER_COLUMNS);
+    sheet.appendRow(headerColumns);
     return;
   }
 
   const lastRow = sheet.getLastRow();
-  const lastColumn = Math.max(sheet.getLastColumn(), HEADER_COLUMNS.length);
+  const lastColumn = Math.max(sheet.getLastColumn(), headerColumns.length);
   const currentValues = sheet.getRange(1, 1, lastRow, lastColumn).getValues();
   const currentHeader = currentValues[0];
   const headerNeedsUpdate =
-    currentHeader.length !== HEADER_COLUMNS.length ||
-    HEADER_COLUMNS.some((header, index) => currentHeader[index] !== header);
+    currentHeader.length !== headerColumns.length ||
+    headerColumns.some((header, index) => currentHeader[index] !== header);
 
   if (headerNeedsUpdate) {
     const columnIndexByHeader = currentHeader.reduce((lookup, header, index) => {
@@ -182,16 +185,16 @@ function ensureHeader(sheet) {
       return lookup;
     }, {});
     const migratedRows = currentValues.slice(1).map((row) =>
-      HEADER_COLUMNS.map((header) => {
+      headerColumns.map((header) => {
         const previousIndex = columnIndexByHeader[header];
         return previousIndex === undefined ? "" : row[previousIndex];
       })
     );
 
     sheet.clearContents();
-    sheet.getRange(1, 1, 1, HEADER_COLUMNS.length).setValues([HEADER_COLUMNS]);
+    sheet.getRange(1, 1, 1, headerColumns.length).setValues([headerColumns]);
     if (migratedRows.length) {
-      sheet.getRange(2, 1, migratedRows.length, HEADER_COLUMNS.length).setValues(migratedRows);
+      sheet.getRange(2, 1, migratedRows.length, headerColumns.length).setValues(migratedRows);
     }
   }
 }
@@ -207,7 +210,27 @@ function normalizeTask(task) {
 }
 
 function cleanPeriodLabel(period) {
-  return normalizeTask(period) === "evening" ? "Evening" : "Morning";
+  return normalizePeriod(period) === "evening" ? "Evening" : "Morning";
+}
+
+function normalizePeriod(period) {
+  return normalizeTask(period) === "evening" ? "evening" : "morning";
+}
+
+function sheetNameForPeriod(period) {
+  return normalizePeriod(period) === "evening" ? SHEET_NAMES.evening : SHEET_NAMES.morning;
+}
+
+function taskColumnsForPeriod(period) {
+  return normalizePeriod(period) === "evening" ? EVENING_TASK_COLUMNS : MORNING_TASK_COLUMNS;
+}
+
+function headerColumnsForPeriod(period) {
+  return [
+    ...BASE_HEADER_COLUMNS,
+    ...taskColumnsForPeriod(period).map((column) => column.header),
+    "Notes"
+  ];
 }
 
 function isFridayDateKey(dateKey) {
