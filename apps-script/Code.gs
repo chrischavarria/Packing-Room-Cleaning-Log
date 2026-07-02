@@ -55,7 +55,11 @@ function doPost(event) {
     return jsonResponse({ ok: false, error: "Unknown payload type" });
   }
 
-  appendCleaningSubmission(payload);
+  const appended = appendCleaningSubmission(payload);
+  if (!appended) {
+    return jsonResponse({ ok: true, duplicate: true });
+  }
+
   appendClosedWeekendEntries(payload);
   sendSlackSubmission(payload);
 
@@ -68,6 +72,7 @@ function appendCleaningSubmission(payload) {
   const headerColumns = headerColumnsForPeriod(period);
   const sheet = getSheet(sheetNameForPeriod(period));
   ensureHeader(sheet, headerColumns);
+  if (hasSubmissionForDate(sheet, payload.dateKey)) return false;
 
   const sectionSummary = payload.sections
     .map((section) => `${section.title}: ${section.tasks.filter((task) => task.completed).length}/${section.tasks.length}`)
@@ -89,6 +94,7 @@ function appendCleaningSubmission(payload) {
     ...taskColumns.map((column) => taskLookup[normalizeTask(column.task)] ? "Yes" : ""),
     payload.notes || ""
   ]);
+  return true;
 }
 
 function appendClosedWeekendEntries(payload) {
@@ -309,6 +315,17 @@ function getSheet(sheetName) {
 
 function findSheet(sheetName) {
   return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+}
+
+function hasSubmissionForDate(sheet, dateKey) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return false;
+
+  return sheet
+    .getRange(2, 1, lastRow - 1, 1)
+    .getValues()
+    .flat()
+    .some((value) => matchesDateKey(value, dateKey));
 }
 
 function ensureHeader(sheet, headerColumns) {

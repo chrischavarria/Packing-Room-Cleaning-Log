@@ -2,6 +2,7 @@ const STORAGE_KEY = "packing-room-cleaning-submissions";
 const TIME_ZONE = "America/Phoenix";
 const DEFAULT_CUTOFF = "17:35";
 let activePeriod = "morning";
+let isSubmitting = false;
 
 const morningTasks = [
   "Workstation 1 morning cleaning completed",
@@ -169,6 +170,7 @@ function renderDaySections() {
   if (isEvening && isMonthlyFriday) labels.push("Monthly");
   els.dayChip.textContent = labels.join(" + ");
   updateCompletionSummary();
+  updateSubmitButtonState();
 }
 
 function handlePeriodTabClick(event) {
@@ -187,6 +189,14 @@ async function handleSubmit(event) {
   event.preventDefault();
   clearMessage();
 
+  if (isSubmitting) return;
+
+  if (hasSubmittedActivePeriodToday()) {
+    setSubmitSubmitted();
+    showMessage(`${periodLabel(activePeriod)} cleaning has already been submitted today.`, "success");
+    return;
+  }
+
   if (!els.form.checkValidity()) {
     els.form.reportValidity();
     showMessage("Check every item before submitting.", "error");
@@ -195,6 +205,8 @@ async function handleSubmit(event) {
 
   const payload = buildPayload();
   const config = window.PACKING_ROOM_CONFIG || {};
+  isSubmitting = true;
+  setSubmitLoading();
 
   try {
     if (config.appScriptUrl) {
@@ -212,7 +224,11 @@ async function handleSubmit(event) {
     renderDaySections();
     renderHistory();
     updateCompletionSummary();
+    isSubmitting = false;
+    setSubmitSubmitted();
   } catch (error) {
+    isSubmitting = false;
+    updateSubmitButtonState();
     showMessage(`Submission failed: ${error.message}`, "error");
   }
 }
@@ -355,6 +371,47 @@ function clearLocalHistory() {
   localStorage.removeItem(STORAGE_KEY);
   renderHistory();
   updateSubmissionStatus();
+  updateSubmitButtonState();
+}
+
+function hasSubmittedActivePeriodToday() {
+  const today = localDateKey(new Date());
+  return submissions().some((item) => item.dateKey === today && item.cleaningPeriod === activePeriod);
+}
+
+function updateSubmitButtonState() {
+  if (isSubmitting) return;
+
+  if (hasSubmittedActivePeriodToday()) {
+    setSubmitSubmitted();
+    return;
+  }
+
+  setSubmitReady();
+}
+
+function setSubmitReady() {
+  els.submitButton.disabled = false;
+  els.submitButton.classList.remove("is-submitting", "is-submitted");
+  els.submitButton.textContent = `Submit ${activePeriod} cleaning log`;
+}
+
+function setSubmitLoading() {
+  els.submitButton.disabled = true;
+  els.submitButton.classList.remove("is-submitted");
+  els.submitButton.classList.add("is-submitting");
+  els.submitButton.textContent = "Submitting...";
+}
+
+function setSubmitSubmitted() {
+  els.submitButton.disabled = true;
+  els.submitButton.classList.remove("is-submitting");
+  els.submitButton.classList.add("is-submitted");
+  els.submitButton.textContent = "Submitted";
+}
+
+function periodLabel(period) {
+  return period === "evening" ? "Evening" : "Morning";
 }
 
 function suggestInitials() {

@@ -566,6 +566,18 @@ button[type="submit"]:focus-visible {
   outline: none;
 }
 
+button[type="submit"]:disabled {
+  cursor: not-allowed;
+}
+
+button[type="submit"].is-submitting {
+  background: #7c8a93;
+}
+
+button[type="submit"].is-submitted {
+  background: var(--ok);
+}
+
 .secondary-button {
   border: 1px solid #d4dce2;
   background: #fff;
